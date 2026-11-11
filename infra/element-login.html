@@ -1,0 +1,17 @@
+<!doctype html>
+<meta charset="utf-8">
+<meta name="referrer" content="no-referrer">
+<title>Universe — Element</title>
+<p>Открываем Universe в Element…</p>
+<script>
+  // Element's normal token-login flow expects the SSO homeserver in its own origin.
+  const parameters = new URLSearchParams(location.hash.slice(1));
+  const token = parameters.get('token'), room = parameters.get('room');
+  history.replaceState(null, '', location.pathname);
+  if (token && room && room.startsWith('!') && !/[\r\n]/.test(room)) {
+    localStorage.setItem('mx_sso_hs_url', 'http://127.0.0.1:18008');
+    const target = new URL('/', location.origin);
+    target.searchParams.set('loginToken', token); target.hash = '/room/' + encodeURIComponent(room);
+    location.replace(target.href);
+  } else document.querySelector('p').textContent = 'Откройте локальную ссылку Universe ещё раз.';
+</script>

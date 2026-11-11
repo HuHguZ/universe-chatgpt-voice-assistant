@@ -1,0 +1,4 @@
+{
+  "matrix_rtc_mode": "matrix_2_0",
+  "matrix_rtc_session": { "wait_for_key_rotation_ms": 5000 }
+}

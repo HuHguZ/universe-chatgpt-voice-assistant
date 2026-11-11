@@ -1,0 +1,19 @@
+{
+  "default_server_config": {
+    "m.homeserver": {
+      "base_url": "http://127.0.0.1:18008",
+      "server_name": "sonora.local"
+    }
+  },
+  "brand": "Universe Voice Assistant",
+  "disable_custom_urls": true,
+  "disable_guests": true,
+  "force_verification": false,
+  "features": { "feature_element_call_react": false },
+  "default_federate": false,
+  "integrations_ui_url": "",
+  "integrations_rest_url": "",
+  "integrations_widgets_urls": [],
+  "room_directory": { "servers": ["sonora.local"] },
+  "element_call": { "use_exclusively": true, "participant_limit": 8, "brand": "Element Call" }
+}

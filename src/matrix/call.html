@@ -1,0 +1,75 @@
+<!doctype html>
+<html lang="ru">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Universe — голосовая комната</title>
+<style>
+:root{color-scheme:light;--paper:#f4f0e7;--ink:#282f29;--muted:#777d72;--line:#dcded1;--accent:#ba542e;--green:#4a7254}
+*{box-sizing:border-box}body{margin:0;background:var(--paper);color:var(--ink);font-family:Candara,"Trebuchet MS",sans-serif}button{font:inherit;cursor:pointer}button:disabled{cursor:wait;opacity:.55}button:focus-visible{outline:3px solid var(--green);outline-offset:5px}
+main{max-width:1000px;min-height:100svh;margin:auto;padding:38px 32px;display:flex;flex-direction:column}header{display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--line);padding-bottom:23px}.brand{font-size:24px;letter-spacing:-1px;font-weight:700}.brand span{color:var(--accent)}.privacy{font-size:13px;color:var(--green)}section{flex:1;display:flex;flex-direction:column;justify-content:center;padding:48px 0 36px}.eyebrow{color:var(--muted);font-size:12px;letter-spacing:2.5px;text-transform:uppercase}h1{font-family:Georgia,serif;font-size:clamp(46px,8vw,80px);font-weight:400;letter-spacing:-3px;margin:17px 0 12px;line-height:1.1}.intro{color:var(--muted);font-size:18px;margin:0 0 36px;max-width:570px;line-height:1.5}.people{display:grid;grid-template-columns:1fr 1fr;gap:18px}.person{border:1px solid var(--line);border-radius:18px;padding:28px;min-height:208px;position:relative;display:flex;align-items:center;gap:22px}.person.bot{background:#e9eddf}.avatar{width:78px;height:78px;border-radius:50%;background:#d7dfc8;display:grid;place-items:center;flex-shrink:0}.avatar svg{width:42px;fill:none;stroke:var(--ink);stroke-width:1.8}.human .avatar{background:#e5dfd3}.name{font-size:24px;margin:0 0 5px}.sub{color:var(--muted);font-size:14px;margin:0;line-height:1.5}.badge{position:absolute;left:28px;top:18px;text-transform:uppercase;letter-spacing:1.5px;font-size:10px;color:var(--green)}.state{display:flex;align-items:center;gap:9px;font-size:15px;min-height:52px;margin:20px 0 9px}.dot{height:7px;width:7px;background:var(--muted);border-radius:50%;flex-shrink:0}body[data-phase=ready] .dot{background:var(--green);box-shadow:0 0 0 5px #4a72541a}body[data-phase=error] .dot{background:var(--accent)}.actions{display:flex;gap:12px;flex-wrap:wrap}.join{border:0;border-radius:10px;background:var(--accent);color:#fff;padding:16px 28px;font-weight:700}.secondary{border:1px solid var(--line);border-radius:10px;background:transparent;color:var(--ink);padding:15px 22px}.hint{font-size:14px;color:var(--muted);line-height:1.6;margin-top:18px;max-width:650px}footer{display:flex;justify-content:space-between;border-top:1px solid var(--line);padding-top:20px;font-size:12px;color:var(--muted)}[hidden]{display:none!important}@media(max-width:620px){main{padding:24px 20px}.people{grid-template-columns:1fr}.person{min-height:155px;padding:30px 22px 22px}.badge{left:22px;top:12px}.avatar{width:62px;height:62px}h1{letter-spacing:-2px}section{padding-top:34px}.privacy{font-size:11px}.join{flex:1}footer{gap:12px}}
+</style>
+<body data-phase="idle">
+<main>
+  <header><div class="brand">universe<span>●</span></div><div class="privacy">◈ Зашифрованный звонок</div></header>
+  <section aria-label="Голосовая комната">
+    <div class="eyebrow">Ваша голосовая комната</div>
+    <h1>Поговорим.</h1>
+    <p class="intro">Говорите с Universe, задавайте вопросы и просите выполнить подключённые действия.</p>
+    <div class="people">
+      <article class="person bot"><span class="badge">Ассистент</span><div class="avatar"><svg viewBox="0 0 48 48" aria-hidden="true"><rect x="8" y="14" width="32" height="25" rx="8"/><path d="M24 14V8M4 23v9m40-9v9M18 33h12"/><circle cx="24" cy="6" r="2"/><circle cx="18" cy="24" r="2"/><circle cx="30" cy="24" r="2"/></svg></div><div><p class="name">Universe</p><p class="sub" id="bot-state">Ждёт подключения</p></div></article>
+      <article class="person human"><span class="badge">Участник</span><div class="avatar"><svg viewBox="0 0 48 48" aria-hidden="true"><circle cx="24" cy="17" r="8"/><path d="M9 40c0-10 7-15 15-15s15 5 15 15"/></svg></div><div><p class="name">Вы</p><p class="sub" id="mic-state">Микрофон выключен</p></div></article>
+    </div>
+    <div class="state" role="status" aria-live="polite"><span class="dot"></span><span id="status">В комнате только вы и ассистент</span></div>
+    <div class="actions"><button class="join" id="join" disabled>Загрузка…</button><button class="secondary" id="mute" hidden aria-pressed="false">Выключить микрофон</button><button class="secondary" id="leave" hidden>Завершить звонок</button></div>
+    <p class="hint" id="hint">Разрешите браузеру доступ к микрофону. Лучше надеть наушники.<br>Можно спросить: «Который час?» или «Проверь версию Node.js на компьютере».</p>
+  </section>
+  <footer><span>Локальная комната · ваша подписка ChatGPT</span><span>Universe / voice lab</span></footer>
+</main>
+<script type="module">
+import '/browser.js';
+const $ = id => document.getElementById(id);
+let joined = false, muted = false, leaving = false, generation = 0, starting;
+function state(phase, text) { document.body.dataset.phase = phase; $('status').textContent = text; }
+async function post(path) { const result = await fetch(path, {method:'POST'}); if(!result.ok) throw new Error(result.status===409?'Комната уже занята. Завершите предыдущий звонок.':'Не удалось подключиться. Завершите звонок и попробуйте снова.'); return result.status===204?null:result.json(); }
+window.sonoraMatrixAudio = () => {};
+window.sonoraMatrixError = () => { state('error','Ошибка соединения. Завершите звонок и подключитесь заново.'); void end(); };
+window.sonoraMatrixReady = () => post('/ready');
+$('join').disabled=false; $('join').textContent='Войти в звонок';
+$('join').onclick = () => { starting = begin(); };
+async function begin() {
+  const attempt = ++generation;
+  $('join').disabled=true; $('leave').hidden=false;
+  try {
+    state('joining','Подключаем участников и настраиваем шифрование…');
+    const options = await post('/join');
+    if(attempt!==generation){await post('/leave').catch(()=>{});return;}
+    joined=true;
+    await window.sonoraMatrix.start(options);
+    if(attempt!==generation)return;
+    state('joining','Подключаем голос Universe…');
+    await post('/connected');
+    if(attempt!==generation)return;
+    state('joining','Разрешите доступ к микрофону в браузере…');
+    await window.sonoraMatrix.enableMicrophone();
+    if(attempt!==generation)return;
+    joined=true; muted=false;
+    $('join').hidden=true; $('mute').hidden=false; $('mute').setAttribute('aria-pressed','false'); $('mute').textContent='Выключить микрофон';
+    $('bot-state').textContent='На связи'; $('mic-state').textContent='Микрофон включён';
+    state('ready','Universe слушает. Можно говорить.');
+  } catch(error) { if(attempt===generation)state('error', error.name==='NotAllowedError'?'Доступ к микрофону не разрешён. Разрешите его в настройках сайта.':error.message); }
+}
+$('mute').onclick = () => { muted=!muted; window.sonoraMatrix.state.microphone.getAudioTracks().forEach(track=>track.enabled=!muted); $('mute').setAttribute('aria-pressed',String(muted)); $('mute').textContent=muted?'Включить микрофон':'Выключить микрофон'; $('mic-state').textContent=muted?'Микрофон выключен':'Микрофон включён'; };
+async function end() {
+  if(leaving)return; leaving=true; generation++; joined=false; $('leave').disabled=true;
+  await Promise.allSettled([window.sonoraMatrix.close(),post('/leave')]);
+  await starting;
+  await window.sonoraMatrix.close().catch(()=>{});
+  $('join').hidden=false; $('join').disabled=false; $('join').textContent='Войти в звонок'; $('mute').hidden=true; $('leave').hidden=true; $('leave').disabled=false;
+  $('bot-state').textContent='Ждёт подключения'; $('mic-state').textContent='Микрофон выключен';
+  if(document.body.dataset.phase!=='error')state('idle','Звонок завершён'); leaving=false;
+}
+$('leave').onclick=end;
+setInterval(async()=>{if(!joined)return; try{const result=await fetch('/status'); const status=await result.json(); if(status.phase==='error'){state('error','Голосовая сессия завершилась. Подключитесь заново.');await end();}else if(status.phase==='closed'){await end();}}catch{}},2000);
+window.addEventListener('pagehide',()=>{window.sonoraMatrix.state?.microphone?.getTracks().forEach(track=>track.stop()); navigator.sendBeacon('/leave');});
+</script>
+</body></html>

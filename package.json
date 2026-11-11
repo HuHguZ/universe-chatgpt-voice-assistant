@@ -1,0 +1,40 @@
+{
+  "name": "universe-chatgpt-voice-assistant",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "node scripts/build.mjs",
+    "check": "tsc --noEmit",
+    "test": "node --test tests/*.test.ts",
+    "start": "node dist/server.mjs",
+    "demo": "node dist/live-call.mjs",
+    "smoke:live": "node dist/live-smoke.mjs",
+    "smoke:agent": "node dist/agent-smoke.mjs",
+    "smoke:memory": "node dist/e2e.mjs --memory",
+    "matrix:native": "node dist/matrix-native.mjs",
+    "smoke:native": "node dist/matrix-native-smoke.mjs",
+    "smoke:native-agent": "node dist/native-agent-smoke.mjs",
+    "smoke:hangup": "node dist/native-agent-smoke.mjs --hangup",
+    "probe": "node dist/probe-codex.mjs",
+    "smoke": "node dist/smoke.mjs",
+    "smoke:voice": "node dist/smoke.mjs --voice",
+    "smoke:matrix": "node dist/matrix-smoke.mjs",
+    "smoke:e2e": "node dist/e2e.mjs",
+    "smoke:command": "node dist/e2e.mjs --command",
+    "matrix:up": "docker compose -f infra/compose.yml --profile ui up -d --wait",
+    "matrix:down": "docker compose -f infra/compose.yml --profile ui down"
+  },
+  "dependencies": {
+    "livekit-client": "2.23.0",
+    "matrix-js-sdk": "45.1.0",
+    "playwright-core": "1.65.0",
+    "ws": "8.22.2"
+  },
+  "devDependencies": {
+    "@types/node": "^26.0.0",
+    "@types/ws": "^8.18.1",
+    "esbuild": "0.28.2",
+    "typescript": "7.1.0-beta"
+  }
+}

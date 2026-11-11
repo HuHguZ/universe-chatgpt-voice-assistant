@@ -1,0 +1,59 @@
+server_name: sonora.local
+public_baseurl: http://127.0.0.1:18008/
+pid_file: /data/homeserver.pid
+listeners:
+  - port: 8008
+    tls: false
+    type: http
+    resources:
+      - names: [client, openid]
+        compress: false
+database:
+  name: sqlite3
+  args:
+    database: /data/homeserver.db
+media_store_path: /data/media_store
+signing_key_path: /data/sonora.local.signing.key
+log_config: /config/log.config
+report_stats: false
+trusted_key_servers: []
+federation_domain_whitelist: []
+# shortcut: open registration is local-lab only; require verified registration before exposing a server.
+enable_registration: true
+enable_registration_without_verification: true
+# One-use, short-lived login for the loopback-only Element lab bootstrap.
+login_via_existing_session:
+  enabled: true
+  require_ui_auth: false
+  token_timeout: 60s
+rc_registration:
+  per_second: 1
+  burst_count: 50
+rc_login:
+  address:
+    per_second: 1
+    burst_count: 50
+  account:
+    per_second: 1
+    burst_count: 50
+rc_message:
+  per_second: 5
+  burst_count: 100
+rc_delayed_event_mgmt:
+  per_second: 1
+  burst_count: 20
+experimental_features:
+  msc3266_enabled: true
+  msc4143_enabled: true
+  msc4222_enabled: true
+  msc4354_enabled: true
+  msc4502_enabled: true
+  msc4512_enabled: true
+max_event_delay_duration: 24h
+app_service_config_files:
+  - /config/app-service.yaml
+matrix_rtc:
+  transports:
+    - type: livekit
+      url: ws://127.0.0.1:17880
+      server_name: sonora.local

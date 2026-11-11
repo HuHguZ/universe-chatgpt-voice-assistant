@@ -1,0 +1,112 @@
+name: sonora-lab
+
+services:
+  synapse-init:
+    image: ghcr.io/element-hq/synapse:v1.165.0
+    command: generate
+    environment:
+      SYNAPSE_SERVER_NAME: sonora.local
+      SYNAPSE_REPORT_STATS: "no"
+    volumes:
+      - synapse-data:/data
+
+  synapse:
+    image: ghcr.io/element-hq/synapse:v1.165.0
+    environment:
+      SYNAPSE_CONFIG_PATH: /config/homeserver.yaml
+    depends_on:
+      synapse-init:
+        condition: service_completed_successfully
+    volumes:
+      - synapse-data:/data
+      - ./synapse.yaml:/config/homeserver.yaml:ro
+      - ./synapse-log.config:/config/log.config:ro
+      - ./app-service.yaml:/config/app-service.yaml:ro
+    ports:
+      - "127.0.0.1:18008:8008"
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8008/health', timeout=3)"]
+      interval: 5s
+      timeout: 4s
+      retries: 20
+
+  livekit:
+    image: livekit/livekit-server:v1.13.11
+    command: ["--config", "/etc/livekit.yaml"]
+    volumes:
+      - ./livekit.yaml:/etc/livekit.yaml:ro
+    ports:
+      - "127.0.0.1:17880:17880/tcp"
+      - "127.0.0.1:17881:17881/tcp"
+      - "127.0.0.1:17882:17882/udp"
+      - "127.0.0.1:16080:6080/tcp"
+
+  jwt:
+    image: ghcr.io/element-hq/lk-jwt-service:0.9.0
+    # One loopback SFU URL works for Windows clients and the JWT room API.
+    network_mode: service:livekit
+    depends_on:
+      livekit:
+        condition: service_started
+      synapse:
+        condition: service_healthy
+    environment:
+      LIVEKIT_URL: ws://127.0.0.1:17880
+      LIVEKIT_KEY: devkey
+      LIVEKIT_SECRET: sonora-local-dev-secret-not-for-production
+      LIVEKIT_JWT_BIND: 0.0.0.0:6080
+      LIVEKIT_FULL_ACCESS_HOMESERVERS: sonora.local
+      LIVEKIT_REMOTE_CAN_PUBLISH_HOMESERVERS: ""
+      LIVEKIT_AS_REGISTRATION_FILE: /config/app-service.yaml
+      LIVEKIT_HS_SERVER_NAME: sonora.local
+      LIVEKIT_CS_API_URL_OVERRIDES: sonora.local=http://synapse:8008
+      LIVEKIT_LOG_LEVEL: warn
+    volumes:
+      - ./app-service.yaml:/config/app-service.yaml:ro
+
+  element:
+    image: ghcr.io/element-hq/element-web:v1.12.33
+    profiles: [ui]
+    logging:
+      driver: none
+    depends_on:
+      element-call-patch:
+        condition: service_completed_successfully
+    environment:
+      ELEMENT_WEB_PORT: "8080"
+    volumes:
+      - ./element-config.json:/app/config.json:ro
+      - element-call-assets:/app/widgets/element-call:ro
+      - type: volume
+        source: element-call-assets
+        target: /app/assets
+        read_only: true
+        volume:
+          subpath: assets
+      - ./element-call-config.json:/app/widgets/element-call/config.json:ro
+      - ./element-login.html:/app/universe-login.html:ro
+    ports:
+      - "127.0.0.1:18081:8080"
+
+  element-call-assets:
+    image: ghcr.io/element-hq/element-call@sha256:438bbe669b2d36620c92a8ad37b3ab0e4a3e4a39237d7c9358a7d27caffe0539
+    profiles: [ui]
+    user: "0:0"
+    entrypoint: [sh, -c, "cp -a /app/. /call/"]
+    volumes:
+      - element-call-assets:/call
+
+  element-call-patch:
+    image: ghcr.io/element-hq/synapse:v1.165.0
+    profiles: [ui]
+    entrypoint: [python, /config/call-media-ready.py]
+    depends_on:
+      element-call-assets:
+        condition: service_completed_successfully
+    volumes:
+      - element-call-assets:/call
+      - ./call-media-ready.py:/config/call-media-ready.py:ro
+
+volumes:
+  synapse-data:
+  element-call-assets:
