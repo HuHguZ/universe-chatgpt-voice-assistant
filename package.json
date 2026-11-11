@@ -6,6 +6,7 @@
   "scripts": {
     "build": "node scripts/build.mjs",
     "check": "tsc --noEmit",
+    "setup:browser": "node node_modules/playwright-core/cli.js install --with-deps --no-shell chromium",
     "test": "node --test tests/*.test.ts",
     "start": "node dist/server.mjs",
     "demo": "node dist/live-call.mjs",
@@ -16,6 +17,7 @@
     "smoke:native": "node dist/matrix-native-smoke.mjs",
     "smoke:native-agent": "node dist/native-agent-smoke.mjs",
     "smoke:hangup": "node dist/native-agent-smoke.mjs --hangup",
+    "smoke:platform": "node dist/platform-smoke.mjs",
     "probe": "node dist/probe-codex.mjs",
     "smoke": "node dist/smoke.mjs",
     "smoke:voice": "node dist/smoke.mjs --voice",

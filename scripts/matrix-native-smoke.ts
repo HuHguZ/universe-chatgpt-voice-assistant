@@ -51,7 +51,7 @@ sockets.on('connection', ws => {
 api.listen(0, '127.0.0.1'); await once(api, 'listening');
 const app = await createNativeMatrixServer(`ws://127.0.0.1:${(api.address() as AddressInfo).port}/session`);
 app.server.listen(0, '127.0.0.1'); await once(app.server, 'listening');
-const browser = await chromium.launch({ channel: process.platform === 'win32' ? 'msedge' : 'chromium', headless: true, args: ['--use-fake-device-for-media-stream', '--use-fake-ui-for-media-stream', `--use-file-for-fake-audio-capture=${microphone}`, '--autoplay-policy=no-user-gesture-required', '--mute-audio'] });
+const browser = await chromium.launch({ channel: 'chromium', headless: true, args: ['--use-fake-device-for-media-stream', '--use-fake-ui-for-media-stream', `--use-file-for-fake-audio-capture=${microphone}`, '--autoplay-policy=no-user-gesture-required', '--mute-audio'] });
 const context = await browser.newContext({ locale: 'en-US', permissions: ['microphone'] });
 let microphoneRequests = 0;
 await context.exposeFunction('nativeMicrophoneRequested', () => { microphoneRequests++; });

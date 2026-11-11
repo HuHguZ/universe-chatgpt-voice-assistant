@@ -1,17 +1,17 @@
 import assert from 'node:assert/strict';
-import { readFile, access } from 'node:fs/promises';
-import { execFile } from 'node:child_process';
-import { promisify } from 'node:util';
-import { resolve } from 'node:path';
+import { readFile, access, mkdir, writeFile } from 'node:fs/promises';
+import { gunzipSync } from 'node:zlib';
+import { resolve, dirname } from 'node:path';
 import { setTimeout as delay } from 'node:timers/promises';
 import type { AudioChunk } from '../src/voice-transport.ts';
 
 export async function testSpeech(command: boolean | 'memory' | 'hangup' = false): Promise<Buffer> {
-  const path = resolve(command === 'hangup' ? 'runtime/test-hangup.wav' : command === 'memory' ? 'runtime/test-memory.wav' : command ? 'runtime/test-command.wav' : 'runtime/test-request.wav');
+  const name = command === 'hangup' || command === 'memory' ? command : command ? 'command' : 'request';
+  const path = resolve(`runtime/test-${name}.wav`);
   try { await access(path); }
   catch {
-    if (process.platform !== 'win32') throw new Error('Generate runtime/test-request.wav as PCM16 mono 48 kHz before this smoke');
-    await promisify(execFile)('powershell.exe', ['-NoProfile', '-ExecutionPolicy', 'Bypass', '-File', resolve('scripts/test-speech.ps1'), ...(command === 'hangup' ? ['-Hangup'] : command === 'memory' ? ['-Memory'] : command ? ['-NodeVersion'] : [])], { windowsHide: true, timeout: 20000 });
+    await mkdir(dirname(path), { recursive: true });
+    await writeFile(path, gunzipSync(await readFile(new URL(`../tests/fixtures/speech/${name}.wav.gz`, import.meta.url))));
   }
   return parseTestWav(await readFile(path));
 }

@@ -8,7 +8,7 @@ flowchart LR
     A <-->|"PCM16 + события"| G["WebSocket API Universe"]
     W["Другое приложение"] <--> G
     G <-->|"JSONL"| C["Codex App Server"]
-    G <--> B["Headless Edge WebRTC"]
+    G <--> B["Headless Chromium WebRTC"]
     C -->|"Авторизация и SDP"| V["Голос через аккаунт ChatGPT"]
     B <-->|"Аудио"| V
     C -->|"item/tool/call"| G
@@ -19,7 +19,7 @@ flowchart LR
 
 Universe запускает установленный `codex app-server`, использующий существующий вход пользователя. Проверяется тип аккаунта `chatgpt`. Токены не передаются приложению или аудиобраузеру. Эфемерный поток наследует локальный sandbox-профиль Codex CLI; `approvalPolicy: never` остаётся явной настройкой headless-прототипа, а не наследованием пользовательского approval-режима. Принудительный read-only sandbox и запрет штатных команд убраны: агент может пользоваться своими shell- и файловыми инструментами. На проверенной машине CLI уже имеет `danger-full-access` / `never`; глобальная конфигурация не меняется. Внешние MCP, приложения и плагины для потока отключены.
 
-Для подписочного голоса проверен `thread/realtime/start` с `version: "v3"`, `outputModality: "audio"` и `transport: {type: "webrtc", sdp}`. SDP answer приходит через `thread/realtime/sdp`. Временный headless Edge обменивается аудио с сервисом; Node передаёт PCM через Web Audio. Используется negotiated data channel `oai-events`, id 0, как в изученном Alisa Voice Assistant.
+Для подписочного голоса проверен `thread/realtime/start` с `version: "v3"`, `outputModality: "audio"` и `transport: {type: "webrtc", sdp}`. SDP answer приходит через `thread/realtime/sdp`. Временный headless Chromium обменивается аудио с сервисом; Node передаёт PCM через Web Audio. Используется negotiated data channel `oai-events`, id 0, как в изученном Alisa Voice Assistant.
 
 WebSocket-транспорт голоса в установленной версии требует API-ключ; Universe его не использует. Наличие `appendAudio` в схеме само по себе не означает подписочный доступ по этому маршруту. `appendText` служит контекстом голоса; полноценное текстовое поручение отправляется через `turn/start` и `turn/steer`.
 

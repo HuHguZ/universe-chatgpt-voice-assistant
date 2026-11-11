@@ -33,7 +33,7 @@ const api = createSonoraServer({ sessionFactory: send => {
 api.server.listen(0, '127.0.0.1'); await once(api.server, 'listening');
 const app = await createNativeMatrixServer(`ws://127.0.0.1:${(api.server.address() as AddressInfo).port}/session`);
 app.server.listen(0, '127.0.0.1'); await once(app.server, 'listening');
-const browser = await chromium.launch({ channel: process.platform === 'win32' ? 'msedge' : 'chromium', headless: true, args: ['--use-fake-device-for-media-stream', '--use-fake-ui-for-media-stream', `--use-file-for-fake-audio-capture=${microphone}`, '--autoplay-policy=no-user-gesture-required', '--mute-audio'] });
+const browser = await chromium.launch({ channel: 'chromium', headless: true, args: ['--use-fake-device-for-media-stream', '--use-fake-ui-for-media-stream', `--use-file-for-fake-audio-capture=${microphone}`, '--autoplay-policy=no-user-gesture-required', '--mute-audio'] });
 try {
   const context = await browser.newContext({ locale: 'en-US', permissions: ['microphone'] });
   const page = await context.newPage();

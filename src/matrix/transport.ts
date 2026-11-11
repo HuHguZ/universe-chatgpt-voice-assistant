@@ -56,7 +56,7 @@ export class MatrixAudioTransport extends EventEmitter {
         response.end(asset?.[1] ?? 'Not found');
       });
       await new Promise<void>((resolve, reject) => { transport.server!.once('error', reject); transport.server!.listen(0, '127.0.0.1', resolve); });
-      transport.browser = await chromium.launch({ channel: process.platform === 'win32' ? 'msedge' : 'chromium', headless: true, args: ['--autoplay-policy=no-user-gesture-required', '--mute-audio'] });
+      transport.browser = await chromium.launch({ channel: 'chromium', headless: true, args: ['--autoplay-policy=no-user-gesture-required', '--mute-audio'] });
       transport.page = await transport.browser.newPage();
       await transport.page.exposeFunction('sonoraMatrixAudio', (audio: AudioChunk) => transport.emit('audio', audio));
       await transport.page.exposeFunction('sonoraMatrixError', (message: string) => transport.emit('transportError', new Error(message)));

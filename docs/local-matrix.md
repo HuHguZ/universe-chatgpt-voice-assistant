@@ -1,8 +1,8 @@
 # Локальный MatrixRTC стенд
 
-Стенд работает только на этом Windows-компьютере через Docker Desktop. Compose-проект — `sonora-lab`; существующие контейнеры и Matrix VM друга не используются. Node.js, Universe и Codex продолжают работать на Windows с существующим входом ChatGPT.
+Стенд работает локально через Docker Engine с Compose на Linux либо Docker Desktop на Windows/macOS. Compose-проект — `sonora-lab`; существующие контейнеры и внешние серверы не используются. Node.js, Universe и Codex работают на хосте с существующим входом ChatGPT.
 
-| Компонент | Адрес с Windows | Образ |
+| Компонент | Адрес с хоста | Образ |
 | --- | --- | --- |
 | Synapse | `http://127.0.0.1:18008` | `ghcr.io/element-hq/synapse:v1.165.0` |
 | LiveKit, сигнализация | `ws://127.0.0.1:17880` | `livekit/livekit-server:v1.13.11` |
@@ -10,13 +10,13 @@
 | MatrixRTC JWT | `http://127.0.0.1:16080` | `ghcr.io/element-hq/lk-jwt-service:0.9.0` |
 | Element, профиль `ui` | `http://127.0.0.1:18081` | `ghcr.io/element-hq/element-web:v1.12.33` |
 
-Server name — `sonora.local`. Это Matrix-идентификатор сервера; DNS для него на Windows не требуется. В Element уже прописан HTTP-адрес Synapse. В браузере можно зарегистрировать отдельный локальный аккаунт без почты. Для автоматического входа и настоящего звонка боту использовать [native-адаптер](matrix-native.md); он проверен с синтетической речью.
+Server name — `sonora.local`. Это Matrix-идентификатор сервера; DNS для него на хосте не требуется. В Element уже прописан HTTP-адрес Synapse. В браузере можно зарегистрировать отдельный локальный аккаунт без почты. Для автоматического входа и настоящего звонка боту использовать [native-адаптер](matrix-native.md); он проверен с синтетической речью.
 
 ## Запуск и проверка
 
 Из корня проекта:
 
-```powershell
+```sh
 docker compose -f infra/compose.yml config --quiet
 docker compose -f infra/compose.yml --profile ui up -d --wait --wait-timeout 90
 node infra/lab.mjs
@@ -32,7 +32,7 @@ node infra/lab.mjs
 
 Проверка состояния и обычная остановка с сохранением базы:
 
-```powershell
+```sh
 docker compose -f infra/compose.yml --profile ui ps
 docker compose -f infra/compose.yml --profile ui down
 ```
@@ -62,7 +62,7 @@ docker compose -f infra/compose.yml --profile ui down
 
 Готовые функции в `infra/lab.mjs`: `createLabUser(localpart?, displayName?)`, `createLabRoom(owner, guest)`, `getLiveKitToken(user, roomId, memberId?, slotId?)`, `matrixRequest(path, options)`. Пользователь возвращается в форме `{userId, deviceId, accessToken}`. Пароль генерируется случайно и не выводится; токены возвращаются вызывающему коду только в памяти. Не выводить целиком возвращённые объекты и не сохранять их в JSON или `.env`.
 
-Устаревший маршрут `/sfu/get` с Matrix OpenID в этом стенде не используется: он требует отдельного HTTPS federation discovery. Современный C-S маршрут выше проверен вживую и позволяет обойтись без установки локальных CA и изменения hosts. JWT-контейнер разделяет network namespace LiveKit, поэтому один SFU loopback-адрес доступен и ему, и Windows-клиенту.
+Устаревший маршрут `/sfu/get` с Matrix OpenID в этом стенде не используется: он требует отдельного HTTPS federation discovery. Современный C-S маршрут выше проверен вживую и позволяет обойтись без установки локальных CA и изменения hosts. JWT-контейнер разделяет network namespace LiveKit, поэтому один SFU loopback-адрес доступен и ему, и клиенту на хосте.
 
 ## Границы стенда и проверенный результат
 

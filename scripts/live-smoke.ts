@@ -9,7 +9,7 @@ await testSpeech(true);
 const app = await createLiveCallServer();
 app.server.listen(0,'127.0.0.1');await once(app.server,'listening');
 const url=`http://127.0.0.1:${(app.server.address() as any).port}`;
-const browser=await chromium.launch({channel:'msedge',headless:true,args:['--use-fake-device-for-media-stream',`--use-file-for-fake-audio-capture=${resolve('runtime/test-command.wav')}%noloop`,'--autoplay-policy=no-user-gesture-required','--mute-audio']});
+const browser=await chromium.launch({channel:'chromium',headless:true,args:['--use-fake-device-for-media-stream',`--use-file-for-fake-audio-capture=${resolve('runtime/test-command.wav')}%noloop`,'--autoplay-policy=no-user-gesture-required','--mute-audio']});
 try{
   const context=await browser.newContext({viewport:{width:1280,height:900}});await context.grantPermissions(['microphone'],{origin:url});
   const page=await context.newPage();await page.goto(url);

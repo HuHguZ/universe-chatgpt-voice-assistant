@@ -35,7 +35,7 @@ HTTP `GET /health`; JSON WebSocket `ws://127.0.0.1:18793/session`. Один вл
 
 ## Локальное действие
 
-Рабочий пример: `scripts/smoke.ts` (`npm.cmd run smoke`), общий обработчик — `scripts/demo-tool.ts`. Голосовой запуск из Matrix проверяется командой `npm.cmd run smoke:command`. Клиент регистрирует:
+Рабочий пример: `scripts/smoke.ts` (`npm run smoke`), общий обработчик — `scripts/demo-tool.ts`. Голосовой запуск из Matrix проверяется командой `npm run smoke:command`. Клиент регистрирует:
 
 ```json
 {

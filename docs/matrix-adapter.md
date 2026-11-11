@@ -9,8 +9,8 @@ small PNG robot and sets the bot's name to Universe and its Matrix avatar URI. T
 media transport does not mutate account profiles. The smoke verifies the uploaded
 avatar URI and display name through the real profile endpoint.
 Run Node from this repository root: the adapter bundles its browser entry point in
-memory with esbuild. Edge runs headless in its own temporary profile on Windows;
-Linux needs the Playwright Chromium executable installed. It never requests a
+memory with esbuild. Playwright Chromium runs headless in its own temporary profile
+on Windows, Linux and macOS; install it with `npm run setup:browser`. It never requests a
 microphone, opens the user's browser profile, or plays the call through speakers.
 
 ```ts
@@ -64,7 +64,7 @@ diagnostics may contain authentication details.
 
 Run the isolated local proof with:
 
-```powershell
+```sh
 node scripts/matrix-smoke.ts
 ```
 
@@ -74,7 +74,7 @@ remaining participant to rotate its media key after the other leaves. It logs
 only sanitized counts and booleans, closes both browsers and logs out both
 devices. Synthetic PCM is never written to disk. The test does not establish
 compatibility with a particular Element UI version or capture a human microphone.
-The separate `npm.cmd run smoke:e2e` and `npm.cmd run smoke:command` checks passed
+The separate `npm run smoke:e2e` and `npm run smoke:command` checks passed
 the subscribed Codex voice bridge, including a real local command and audible
 return audio through this encrypted adapter; see [architecture](architecture.md).
 
@@ -83,13 +83,13 @@ return audio through this encrypted adapter; see [architecture](architecture.md)
 Two runs passed with per-participant E2EE, bidirectional nonzero PCM, distinct
 700/1100 Hz remote tones and a new local media key index after the peer left.
 One verified run received 220/164 20 ms frames. A remote track must be attached to
-a playing HTML audio element before headless Edge supplies nonzero samples to
+a playing HTML audio element before headless Chromium supplies nonzero samples to
 Web Audio. The browser uses `--mute-audio`; no sound is sent to the speakers.
 
 The successful smoke starts both crypto clients concurrently before the first
 encrypted RTC membership is sent. A separate ongoing-call test remains available:
 
-```powershell
+```sh
 node scripts/matrix-smoke.ts --late-join
 ```
 

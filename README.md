@@ -1,5 +1,7 @@
 # Universe ChatGPT Voice Assistant
 
+[![Cross-platform checks](https://github.com/HuHguZ/universe-chatgpt-voice-assistant/actions/workflows/check.yml/badge.svg)](https://github.com/HuHguZ/universe-chatgpt-voice-assistant/actions/workflows/check.yml)
+
 Локальный универсальный голосовой ассистент. Приложения передают текст или PCM-аудио через WebSocket API, получают голос, расшифровки и вызовы зарегистрированных инструментов. MatrixRTC/LiveKit подключается отдельным адаптером. Используется существующий вход Codex через подписку ChatGPT, без отдельного Voice API-ключа.
 
 ```mermaid
@@ -12,31 +14,34 @@ flowchart LR
 
 Уже работают разговор в настоящем Element, выполнение локальных команд и работа с файлами, подключение инструментов через API и выход из звонка по голосовой просьбе. Ядро не зависит от Matrix; для других приложений нужен свой адаптер. Проект пока является локальным прототипом.
 
-Стек: Node.js 26, TypeScript `7.1.0-beta`, esbuild `0.28.2`. Стабильная TypeScript 7.1 на момент установки ещё не опубликована. На Windows для WebRTC используется установленный Microsoft Edge в отдельном временном headless-профиле.
+Стек: Node.js 26, TypeScript `7.1.0-beta`, esbuild `0.28.2`. Стабильная TypeScript 7.1 на момент установки ещё не опубликована. На Windows, Linux и macOS для WebRTC используется один и тот же Chromium из Playwright в отдельном временном headless-профиле.
 
 Проверена полная цепочка: голос из зашифрованного Matrix-звонка → подписочный Codex → реальная локальная команда → голосовой ответ участнику. Проверены `node --version`, запрос оперативной памяти штатным shell-инструментом и создание файла самим агентом. Также проверена страница ручного входа с тестовым микрофонным устройством, выключением микрофона и завершением звонка.
 
-## Подготовка на Windows
+## Подготовка: Windows, Linux, macOS
 
-Понадобятся Node.js 26, Git, Docker Desktop с Compose, Microsoft Edge и авторизованный Codex CLI. Проверенная версия CLI — `0.167.1`; экспериментальный голосовой протокол может меняться между версиями. Авторизация используется с этой машины, копировать токены в проект не нужно.
+Понадобятся Node.js 26, Git и авторизованный Codex CLI. Для Matrix-стенда также нужны Docker Engine с Compose на Linux или Docker Desktop на Windows/macOS. Проверенная версия CLI — `0.167.1`; экспериментальный голосовой протокол может меняться между версиями. Авторизация используется с этой машины, копировать токены в проект не нужно.
 
-```powershell
+```sh
 git clone https://github.com/HuHguZ/universe-chatgpt-voice-assistant.git
 cd universe-chatgpt-voice-assistant
-npm.cmd ci
-codex.cmd login
+npm ci
+npm run setup:browser
+codex login
 ```
 
-Если Codex уже авторизован, достаточно `codex.cmd login status`. Следующие команды выполнять из корня репозитория. Проверки с синтетической русской речью используют Windows SAPI; Linux и macOS отдельно не проверены.
+Если Codex уже авторизован, достаточно `codex login status`. Следующие команды выполнять из корня репозитория. На Windows при блокировке PowerShell-скриптов использовать `npm.cmd` и `codex.cmd` вместо `npm` и `codex`. На Linux команда `setup:browser` также устанавливает системные библиотеки Chromium и может запросить `sudo`; ориентир для сервера — Ubuntu/Debian. Требования браузера описаны в [документации Playwright](https://playwright.dev/docs/browsers).
+
+Тестовая русская речь поставляется готовыми синтетическими WAV-фикстурами: Windows SAPI, `say`, `espeak` и FFmpeg для проверок не требуются. `scripts/test-speech.ps1` оставлен только как необязательный инструмент перегенерации фикстур на Windows.
 
 ## Позвонить боту из Matrix
 
-```powershell
-npm.cmd run matrix:up
-npm.cmd run build
-npm.cmd start
+```sh
+npm run matrix:up
+npm run build
+npm start
 # В другом терминале:
-npm.cmd run matrix:native
+npm run matrix:native
 ```
 
 Открыть **http://127.0.0.1:18795/matrix**: одноразовый токен автоматически войдёт в настоящий Element и откроет приватный чат **Universe**. Логин и пароль вводить не нужно. Нажать кнопку голосового звонка в заголовке чата и разрешить микрофон. Бот постоянно синхронизирует криптоустройство, подготавливает Codex перед ответом и подключается к звонку. Завершение и повторный звонок проверены.
@@ -47,10 +52,10 @@ npm.cmd run matrix:native
 
 ## Отдельная тестовая страница разговора
 
-```powershell
-npm.cmd run matrix:up
-npm.cmd run build
-npm.cmd run demo
+```sh
+npm run matrix:up
+npm run build
+npm run demo
 ```
 
 Открыть **http://127.0.0.1:18794** в Chrome или Edge, нажать «Войти в звонок», разрешить микрофон и дождаться «Universe слушает». Регистрация не нужна: два временных Matrix-устройства и приватная зашифрованная комната создаются автоматически. Это собственная страница звонка Universe, использующая тот же MatrixRTC/LiveKit-адаптер. Есть кнопки выключения микрофона и завершения звонка; закрытие страницы также завершает сессию. Токены остаются в памяти, голос не записывается. Доступен один локальный разговор; ссылка не опубликована в сеть.
@@ -61,13 +66,13 @@ npm.cmd run demo
 
 Из корня проекта:
 
-```powershell
-npm.cmd ci
-codex.cmd login status
-npm.cmd run check
-npm.cmd test
-npm.cmd run build
-npm.cmd start
+```sh
+npm ci
+codex login status
+npm run check
+npm test
+npm run build
+npm start
 ```
 
 API: `http://127.0.0.1:18793/health`, WebSocket `ws://127.0.0.1:18793/session`. Одновременно поддерживается один владелец сессии. Отключение клиента закрывает Codex-процесс и аудиобраузер. Для смены порта задать `SONORA_PORT`.
@@ -76,20 +81,21 @@ API: `http://127.0.0.1:18793/health`, WebSocket `ws://127.0.0.1:18793/session`. 
 
 Проверки, запускающие Codex, используют лимиты подписки ChatGPT. `smoke:native` и `smoke:matrix` проверяют транспорт без модели; unit-тесты к сервису не обращаются.
 
-```powershell
-npm.cmd run smoke
-npm.cmd run smoke:agent
-npm.cmd run smoke:memory
-npm.cmd run smoke:native
-npm.cmd run smoke:native-agent
-npm.cmd run smoke:hangup
-npm.cmd run smoke:voice
-npm.cmd run probe
-npm.cmd run matrix:up
+```sh
+npm run smoke
+npm run smoke:agent
+npm run smoke:memory
+npm run smoke:native
+npm run smoke:native-agent
+npm run smoke:hangup
+npm run smoke:platform
+npm run smoke:voice
+npm run probe
+npm run matrix:up
 node infra/lab.mjs
-npm.cmd run smoke:matrix
-npm.cmd run smoke:e2e
-npm.cmd run smoke:command
+npm run smoke:matrix
+npm run smoke:e2e
+npm run smoke:command
 ```
 
 - `smoke`: Codex вызывает `system_time` и клиентский `node_version`; обработчик запускает локальный `node --version` и возвращает результат модели.
@@ -98,13 +104,14 @@ npm.cmd run smoke:command
 - `smoke:native`: настоящий Element, автоответ, шифрованные различимые тоны в обе стороны, mute/unmute и повторный звонок; модель не запускается.
 - `smoke:native-agent`: настоящий чат Element и его кнопка звонка → подписочный Codex → штатные команды проверки ОЗУ → подтверждённый голосовой ответ в Element. Проверка прошла после переименования папки проекта.
 - `smoke:hangup`: голосовая просьба завершить звонок в настоящем Element → `end_call` → фактическое отключение бота от RTC; бот остаётся онлайн и не подключается обратно в прежний вызов.
-- `probe`: синтетическая русская речь → WebRTC Codex → настоящий `system_time` → голосовой ответ. Тестовая запись создаётся офлайн Windows SAPI, микрофон не включается.
+- `smoke:platform`: запуск локального процесса, Codex RPC без обращения к модели, Chromium WebRTC SDP и передача PCM. GitHub Actions запускает сборку, unit-тесты и эту проверку на Linux, macOS и Windows; на Linux дополнительно проверяет настоящие зашифрованные звонки Element в Docker. Авторизация ChatGPT и лимиты подписки для CI не нужны.
+- `probe`: синтетическая русская речь из готовой фикстуры → WebRTC Codex → настоящий `system_time` → голосовой ответ. Микрофон не включается.
 - `smoke:voice`: та же речевая проверка через универсальный WebSocket API Universe.
 - `smoke:matrix`: два участника зашифрованного звонка, аудио в обе стороны, профиль робота и смена медиаключа после выхода участника.
 - `smoke:e2e`: речевой запрос из Matrix-звонка через API Universe к Codex, вызов инструмента и возврат голоса вызывающему участнику. Создаёт временные тестовые устройства и закрывает их после проверки.
 - `smoke:command`: полный Matrix-сценарий с голосовым запросом версии Node.js и реальным запуском команды клиентским обработчиком. Для повторяемой демонстрации достаточно этой команды при работающем Docker-стенде. Звук проверяется в PCM; headless-клиенты не включают колонки.
 
-Локальный Synapse: `http://127.0.0.1:18008`, Element: `http://127.0.0.1:18081`. Стенд использует отдельный Compose-проект и не меняет существующие серверы. Остановка стенда с сохранением данных: `npm.cmd run matrix:down`.
+Локальный Synapse: `http://127.0.0.1:18008`, Element: `http://127.0.0.1:18081`. Стенд использует отдельный Compose-проект и не меняет существующие серверы. Остановка стенда с сохранением данных: `npm run matrix:down`.
 
 ## Интеграция
 

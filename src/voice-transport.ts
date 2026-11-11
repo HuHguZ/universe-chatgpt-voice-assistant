@@ -15,7 +15,7 @@ export class VoiceTransport extends EventEmitter {
     const origin = createServer((_request, response) => response.end('<!doctype html><title>Universe audio transport</title>'));
     await new Promise<void>(resolve => origin.listen(0, '127.0.0.1', resolve));
     try {
-      transport.browser = await chromium.launch({ channel: process.platform === 'win32' ? 'msedge' : 'chromium', headless: true, args: ['--autoplay-policy=no-user-gesture-required'] });
+      transport.browser = await chromium.launch({ channel: 'chromium', headless: true, args: ['--autoplay-policy=no-user-gesture-required'] });
       transport.page = await transport.browser.newPage();
       await transport.page.exposeFunction('sonoraAudio', (audio: AudioChunk) => transport.emit('audio', audio));
       await transport.page.goto(`http://127.0.0.1:${(origin.address() as AddressInfo).port}`);

@@ -17,10 +17,14 @@ its single session slot as busy, within the existing 45-second startup timeout.
 
 Start these from the repository root:
 
-```powershell
-npm.cmd run matrix:up
-npm.cmd run build
-npm.cmd start
+First complete the README setup, including `npm ci` and `npm run setup:browser`.
+The host adapter runs on Windows, Linux or macOS using Playwright Chromium;
+Docker provides the Linux Matrix services on all three hosts.
+
+```sh
+npm run matrix:up
+npm run build
+npm start
 # In another terminal:
 node dist/matrix-native.mjs
 ```
@@ -72,12 +76,12 @@ its modified assets.
 
 ## Verification
 
-```powershell
+```sh
 node --test tests/native-matrix.test.ts
 node scripts/matrix-native-smoke.ts
 node scripts/matrix-smoke.ts
-npm.cmd run smoke:native-agent
-npm.cmd run smoke:hangup
+npm run smoke:native-agent
+npm run smoke:hangup
 ```
 
 The native smoke opens real Element with temporary browser storage and synthetic
